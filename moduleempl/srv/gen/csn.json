@@ -1,0 +1,186 @@
+{
+  "namespace": "app.information",
+  "definitions": {
+    "app.information.Empleados": {
+      "kind": "entity",
+      "elements": {
+        "ID": {
+          "key": true,
+          "type": "cds.Integer"
+        },
+        "EMPL_NAME": {
+          "type": "cds.String",
+          "length": 15
+        },
+        "EMPL_PHONE": {
+          "type": "cds.Integer"
+        },
+        "EMPL_EMAIL": {
+          "type": "cds.String",
+          "length": 30
+        },
+        "EMPL_DATE": {
+          "type": "cds.DateTime"
+        },
+        "EMPL_SALARY": {
+          "type": "cds.Integer"
+        },
+        "AREA": {
+          "type": "cds.Association",
+          "target": "app.information.Area",
+          "keys": [
+            {
+              "ref": [
+                "AREA_ID"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "app.information.Area": {
+      "kind": "entity",
+      "elements": {
+        "AREA_ID": {
+          "key": true,
+          "type": "cds.Integer"
+        },
+        "AREA_NAME": {
+          "type": "cds.String",
+          "length": 15
+        },
+        "AREA_UBICATION": {
+          "type": "cds.String",
+          "length": 15
+        },
+        "AREA_BOSS": {
+          "type": "cds.String",
+          "length": 15
+        },
+        "EMPLEADOS": {
+          "type": "cds.Association",
+          "cardinality": {
+            "max": "*"
+          },
+          "target": "app.information.Empleados",
+          "on": [
+            {
+              "ref": [
+                "EMPLEADOS",
+                "AREA"
+              ]
+            },
+            "=",
+            {
+              "ref": [
+                "$self"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "Main": {
+      "@source": "interaction_srv.cds",
+      "kind": "service"
+    },
+    "Main.Empleado": {
+      "kind": "entity",
+      "projection": {
+        "from": {
+          "ref": [
+            "app.information.Empleados"
+          ]
+        }
+      },
+      "elements": {
+        "ID": {
+          "key": true,
+          "type": "cds.Integer"
+        },
+        "EMPL_NAME": {
+          "type": "cds.String",
+          "length": 15
+        },
+        "EMPL_PHONE": {
+          "type": "cds.Integer"
+        },
+        "EMPL_EMAIL": {
+          "type": "cds.String",
+          "length": 30
+        },
+        "EMPL_DATE": {
+          "type": "cds.DateTime"
+        },
+        "EMPL_SALARY": {
+          "type": "cds.Integer"
+        },
+        "AREA": {
+          "type": "cds.Association",
+          "target": "Main.Area",
+          "keys": [
+            {
+              "ref": [
+                "AREA_ID"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "Main.Area": {
+      "kind": "entity",
+      "projection": {
+        "from": {
+          "ref": [
+            "app.information.Area"
+          ]
+        }
+      },
+      "elements": {
+        "AREA_ID": {
+          "key": true,
+          "type": "cds.Integer"
+        },
+        "AREA_NAME": {
+          "type": "cds.String",
+          "length": 15
+        },
+        "AREA_UBICATION": {
+          "type": "cds.String",
+          "length": 15
+        },
+        "AREA_BOSS": {
+          "type": "cds.String",
+          "length": 15
+        },
+        "EMPLEADOS": {
+          "type": "cds.Association",
+          "cardinality": {
+            "max": "*"
+          },
+          "target": "Main.Empleado",
+          "on": [
+            {
+              "ref": [
+                "EMPLEADOS",
+                "AREA"
+              ]
+            },
+            "=",
+            {
+              "ref": [
+                "$self"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "meta": {
+    "creator": "CDS Compiler v2.11.4",
+    "flavor": "inferred"
+  },
+  "$version": "2.0"
+}
