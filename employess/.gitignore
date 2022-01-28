@@ -1,0 +1,5 @@
+
+# auto generated wildcard
+.env2
+dist/
+resources/
