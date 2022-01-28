@@ -1,62 +1,127 @@
-## Generated mta.yaml based on template version 0.4.0
-## appName = empleadosApp
-## language=nodejs; multitenant=false
-## approuter=
-_schema-version: '3.1'
+_schema-version: "3.1"
 ID: empleadosApp
+description: A simple CAP project.
 version: 1.0.0
-description: "A simple CAP project."
+modules:
+- name: empleadosApp-srv
+  type: nodejs
+  path: srv
+  requires:
+  - name: empleadosApp-db
+  provides:
+  - name: srv-api
+    properties:
+      srv-url: ${default-url}
+  parameters:
+    buildpack: nodejs_buildpack
+  build-parameters:
+    builder: npm-ci
+- name: empleadosApp-db-deployer
+  type: hdb
+  path: db
+  requires:
+  - name: empleadosApp-db
+  parameters:
+    buildpack: nodejs_buildpack
+- name: empleadosApp-destination-content
+  type: com.sap.application.content
+  requires:
+  - name: empleadosApp-destination-service
+    parameters:
+      content-target: true
+  - name: empleadosApp_html_repo_host
+    parameters:
+      service-key:
+        name: empleadosApp_html_repo_host-key
+  - name: uaa_empleadosApp
+    parameters:
+      service-key:
+        name: uaa_empleadosApp-key
+  parameters:
+    content:
+      instance:
+        destinations:
+        - Name: hana_app_empleadosApp_html_repo_host
+          ServiceInstanceName: empleadosApp-html5-app-host-service
+          ServiceKeyName: empleadosApp_html_repo_host-key
+          sap.cloud.service: hana.app
+        - Authentication: OAuth2UserTokenExchange
+          Name: hana_app_uaa_empleadosApp
+          ServiceInstanceName: empleadosApp-xsuaa-service
+          ServiceKeyName: uaa_empleadosApp-key
+          sap.cloud.service: hana.app
+        existing_destinations_policy: ignore
+  build-parameters:
+    no-source: true
+- name: empleadosApp-app-content
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: empleadosApp_html_repo_host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - frontend.zip
+      name: frontend
+      target-path: resources/
+- name: frontend
+  type: html5
+  path: app/frontend
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+resources:
+- name: empleadosApp-db
+  type: com.sap.xs.hdi-container
+  parameters:
+    service: hana
+    service-plan: hdi-shared
+  properties:
+    hdi-service-name: ${service-name}
+- name: empleadosApp-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      init_data:
+        instance:
+          destinations:
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          existing_destinations_policy: update
+      version: 1.0.0
+    service: destination
+    service-name: empleadosApp-destination-service
+    service-plan: lite
+- name: empleadosApp_html_repo_host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-name: empleadosApp-html5-app-host-service
+    service-plan: app-host
+- name: uaa_empleadosApp
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json
+    service: xsuaa
+    service-name: empleadosApp-xsuaa-service
+    service-plan: application
 parameters:
+  deploy_mode: html5-repo
   enable-parallel-deployments: true
-   
 build-parameters:
   before-all:
-   - builder: custom
-     commands:
-      - npm ci
-      - npx -p @sap/cds-dk cds build --production
-
-modules:
- # --------------------- SERVER MODULE ------------------------
- - name: empleadosApp-srv
- # ------------------------------------------------------------
-   type: nodejs
-   path: srv
-   parameters:
-     buildpack: nodejs_buildpack
-   build-parameters:
-     builder: npm-ci
-   requires:
-    # Resources extracted from CAP configuration
-    - name: empleadosApp-db
-   provides:
-    - name: srv-api      # required by consumers of CAP services (e.g. approuter)
-      properties:
-        srv-url: ${default-url}
-
- # -------------------- SIDECAR MODULE ------------------------
- - name: empleadosApp-db-deployer
- # ------------------------------------------------------------
-   type: hdb
-   path: db  
-   parameters:
-     buildpack: nodejs_buildpack
-   requires:
-    # 'hana' and 'xsuaa' resources extracted from CAP configuration
-    - name: empleadosApp-db
-
-
-resources:
- # services extracted from CAP configuration
- # 'service-plan' can be configured via 'cds.requires.<name>.vcap.plan'
-# ------------------------------------------------------------
- - name: empleadosApp-db
-# ------------------------------------------------------------
-   type: com.sap.xs.hdi-container
-   parameters:
-     service: hana  # or 'hanatrial' on trial landscapes
-     service-plan: hdi-shared
-   properties:
-     hdi-service-name: ${service-name}
-
-
+  - builder: custom
+    commands:
+    - npm ci
+    - npx -p @sap/cds-dk cds build --production
